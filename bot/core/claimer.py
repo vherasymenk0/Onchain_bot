@@ -5,6 +5,7 @@ from pyrogram import Client
 from bot.utils import logger
 from bot.exceptions import InvalidSession
 from .headers import headers
+from bot.config import settings
 from .bot_info import bot_info
 from pyrogram.raw.functions.messages import RequestWebView
 from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered
@@ -87,6 +88,15 @@ class Claimer:
             self.http_client.headers['Authorization'] = f"Bearer {token}"
         except Exception as error:
             logger.error(f"{self.session_name} | Error while login: {error}")
+
+    async def get_info(self):
+        try:
+            resp = await self.http_client.get(f"{api_url}/info")
+            user = (await resp.json()).get("user")
+
+            return user
+        except Exception as error:
+            logger.error(f"{self.session_name} | Error while getting user information: {error}")
 
     async def run(self) -> None:
         if self.proxy_str:
