@@ -98,6 +98,15 @@ class Claimer:
         except Exception as error:
             logger.error(f"{self.session_name} | Error while getting user information: {error}")
 
+    async def send_click(self, clicks: int) -> [int, int]:
+        try:
+            resp = await self.http_client.post(f"{api_url}/klick/myself/click", json={'clicks': clicks})
+            data = await resp.json()
+
+            return data['energy'], data['coins']
+        except Exception as error:
+            logger.error(f"{self.session_name} | Error while sending clicks: {error}")
+
     async def run(self) -> None:
         if self.proxy_str:
             await self.check_proxy()
