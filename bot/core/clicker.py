@@ -113,6 +113,17 @@ class Clicker:
         else:
             return math.floor(data['energy']), data['coins']
 
+    async def apply_energy_restoration(self):
+        resp = await self.http_client.post(f"{api_url}/boosts/energy", json={})
+        data = await resp.json()
+
+        if 'message' in data:
+            raise Exception(data['message'])
+        elif 'error' in data:
+            raise Exception(data['error'])
+        elif 'user' in data:
+            return (await resp.json()).get("user")
+
     async def run(self) -> None:
         if self.proxy_str:
             await self.check_proxy()
@@ -124,7 +135,7 @@ class Clicker:
             try:
                 user_info = await self.get_info()
                 energy = math.floor(user_info.get('energy'))
-                has_energy_refill = user_info.get('dailyEnergyRefill') > 0
+                has_energy_restorer = user_info.get('dailyEnergyRefill') > 0
 
                 if settings.MIN_AVAILABLE_ENERGY < energy:
                     sleep_between_clicks = randint(a=settings.SLEEP_BETWEEN_TAP[0], b=settings.SLEEP_BETWEEN_TAP[1])
@@ -133,16 +144,20 @@ class Clicker:
                     energy = current_energy
 
                     logger.success(
-                        f"{self.session_name} | Successfully clicked! | Energy: {energy} | Balance: {balance}")
+                        f"{self.session_name} | Successfully clicked +{clicks} | Energy: {energy} | Balance: {balance}")
                     logger.info(f"Sleep between clicks {sleep_between_clicks}s")
 
                     await asyncio.sleep(delay=sleep_between_clicks)
-                elif has_energy_refill:
+                    continue
+                elif has_energy_restorer:
+                    await self.apply_energy_restoration()
                     logger.info(f"{self.session_name} | Successfully applied energy restoration")
+                    continue
                 else:
                     sleep_time = settings.SLEEP_BY_MIN_ENERGY
-                    logger.info(f"{self.session_name} | Minimum energy reached, sleep {sleep_time}s")
+                    logger.warning(f"{self.session_name} | Minimum energy reached, sleep {sleep_time}s | Energy: {energy}")
                     await asyncio.sleep(delay=sleep_time)
+                    continue
 
             except Exception as error:
                 if str(error) == 'Invalid token':
