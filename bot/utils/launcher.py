@@ -8,7 +8,7 @@ from better_proxy import Proxy
 import json
 from bot.config import settings
 from bot.utils import logger
-from bot.core.claimer import run_claimer
+from bot.core.clicker import run_clicker
 from bot.core.registrator import register_sessions
 from .agent_generator import generate_user_agents
 
@@ -115,7 +115,7 @@ async def run_tasks(tg_clients: list[Client]):
     agents_cycle = cycle(agents)
     tasks = [
         asyncio.create_task(
-            run_claimer(
+            run_clicker(
                 tg_client=tg_client,
                 proxy=next(proxies_cycle) if proxies_cycle else None,
                 agent=next(agents_cycle),
