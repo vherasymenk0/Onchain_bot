@@ -79,17 +79,27 @@ class Claimer:
             logger.error(f"{self.session_name} | Unknown error during Authorization: {error}")
             await asyncio.sleep(delay=3)
 
+    async def login(self, tg_web_data: str):
+        try:
+            resp = await self.http_client.post(f"{api_url}/validate", json={"hash": tg_web_data})
+            data = await resp.json()
+            token = data.get("token")
+            self.http_client.headers['Authorization'] = f"Bearer {token}"
+        except Exception as error:
+            logger.error(f"{self.session_name} | Error while login: {error}")
+
     async def run(self) -> None:
         if self.proxy_str:
             await self.check_proxy()
 
         tg_web_data = await self.get_tg_web_data()
-        print(tg_web_data)
+        await self.login(tg_web_data)
 
         while True:
             try:
                 logger.success(f"{self.session_name} | claimer is running!")
-                logger.info(f"{self.session_name} | tg data {tg_web_data}")
+                await asyncio.sleep(delay=1)
+                continue
 
             except Exception as error:
                 logger.error(f"{self.session_name} | Unknown error: {error}")
